@@ -3,6 +3,7 @@ set -euo pipefail
 
 # MEDS RISC-V Log Analyzer
 # Author: Faisal Habib
+# Date: 2026
 
 # Default values
 FORMAT="text"
@@ -10,20 +11,20 @@ OUTPUT=""
 VERBOSE=0
 LOG_FILE=""
 
-# Colors
+# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m'
 
-# Help function
+# Print usage information
 show_help() {
     echo "Usage: $0 <log_file> [options]"
     echo ""
     echo "Options:"
     echo "  --format [text|csv]  Output format (default: text)"
     echo "  --output <path>      Output file path"
-    echo "  --verbose            Verbose mode"
-    echo "  --help               Help dekho"
+    echo "  --verbose            Enable verbose mode"
+    echo "  --help               Show this help message"
     echo ""
     echo "Examples:"
     echo "  $0 test_data/sample_sim.log"
@@ -31,38 +32,38 @@ show_help() {
     exit 0
 }
 
-# Log function
+# Print log message if verbose mode is enabled
 log_msg() {
     if [ $VERBOSE -eq 1 ]; then
         echo "[$(date +%H:%M:%S)] $*"
     fi
 }
 
-# Analyze function
+# Analyze the log file and extract test results
 analyze_log() {
     local file="$1"
 
     log_msg "Analyzing: $file"
 
-    # Counts nikalo
+    # Count test results
     local total_pass total_fail total_skip total_tests
     total_pass=$(grep -c "TEST PASS:" "$file" || true)
     total_fail=$(grep -c "TEST FAIL:" "$file" || true)
     total_skip=$(grep -c "TEST SKIP:" "$file" || true)
     total_tests=$((total_pass + total_fail + total_skip))
 
-    # Pass rate
+    # Calculate pass rate percentage
     local pass_rate=0
     if [ $total_tests -gt 0 ]; then
         pass_rate=$(echo "scale=1; $total_pass * 100 / $total_tests" | bc)
     fi
 
-    # Failed tests
+    # Extract names of failed tests
     local failed_tests
     failed_tests=$(grep "TEST FAIL:" "$file" | \
         sed 's/.*TEST FAIL: \([^ ]*\).*/\1/' || true)
 
-    # Output
+    # Print output in selected format
     if [ "$FORMAT" = "csv" ]; then
         echo "file,total,passed,failed,skipped,pass_rate"
         echo "$file,$total_tests,$total_pass,$total_fail,$total_skip,${pass_rate}%"
@@ -71,10 +72,11 @@ analyze_log() {
                      "$total_fail" "$total_skip" "$pass_rate" "$failed_tests"
     fi
 
+    # Return exit code based on failures
     [ $total_fail -eq 0 ] && return 0 || return 1
 }
 
-# Print report function
+# Print formatted text report
 print_report() {
     local file="$1" total="$2" pass="$3"
     local fail="$4" skip="$5" rate="$6" failed_list="$7"
@@ -93,9 +95,10 @@ Skipped:       $skip
 
 --- Failed Tests ---"
 
+    # List failed tests or show success message
     if [ -z "$failed_list" ]; then
         report="$report
-  Koi failure nahi!"
+  No failures found!"
     else
         local i=1
         while IFS= read -r test; do
@@ -105,6 +108,7 @@ Skipped:       $skip
         done <<< "$failed_list"
     fi
 
+    # Set verdict based on failure count
     if [ "$fail" -eq 0 ]; then
         report="$report
 
@@ -115,6 +119,7 @@ Skipped:       $skip
 --- Verdict: FAIL ---"
     fi
 
+    # Write to file or print to stdout
     if [ -n "$OUTPUT" ]; then
         mkdir -p "$(dirname "$OUTPUT")"
         echo "$report" > "$OUTPUT"
@@ -124,15 +129,16 @@ Skipped:       $skip
     fi
 }
 
-# Arguments check
+# Check if arguments are provided
 if [ $# -eq 0 ]; then
     show_help
 fi
 
+# First argument is the log file
 LOG_FILE="$1"
 shift
 
-# Options parse karo
+# Parse remaining options
 while [ $# -gt 0 ]; do
     case "$1" in
         --help)    show_help ;;
@@ -143,16 +149,16 @@ while [ $# -gt 0 ]; do
     esac
 done
 
-# File check
+# Verify log file exists
 if [ ! -f "$LOG_FILE" ]; then
-    echo "Error: File nahi mili: $LOG_FILE"
+    echo "Error: File not found: $LOG_FILE"
     exit 1
 fi
 
-# bc install check
+# Install bc if not available
 command -v bc &>/dev/null || sudo apt install bc -y
 
-# Run!
+# Run the analyzer
 if analyze_log "$LOG_FILE"; then
     echo "Exit code: 0"
     exit 0
