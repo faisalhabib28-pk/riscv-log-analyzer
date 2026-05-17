@@ -5,21 +5,38 @@ Student: Faisal Habib
 Summer Training 2026
 
 ## Description
-RISC-V simulation log files analyze karta hai
-aur summary reports generate karta hai.
+A shell-based tool that analyzes RISC-V simulation log files
+and generates summary reports.
+
+## Installation
+```bash
+git clone git@github.com:faisalhabib28-pk/riscv-log-analyzer.git
+cd riscv-log-analyzer
+make setup
+```
 
 ## Usage
 ```bash
+# Basic usage
 bash scripts/analyze.sh test_data/sample_sim.log
+
+# CSV format output
 bash scripts/analyze.sh test_data/sample_sim.log --format csv
+
+# Enable verbose mode
 bash scripts/analyze.sh test_data/sample_sim.log --verbose
+
+# Save output to file
+bash scripts/analyze.sh test_data/sample_sim.log --output output/report.txt
 ```
 
-## Makefile
+## Makefile Targets
 ```bash
-make all     # Sab kuch chalao
-make test    # Tests chalao
-make report  # Report banao
-make clean   # Clean karo
-make help    # Help dekho
+make all     # Run setup, test, and report
+make test    # Analyze all log files
+make report  # Generate summary report
+make clean   # Remove output files
+make help    # Show help message
 ```
+
+## Sample Output
