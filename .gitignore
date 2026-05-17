@@ -1,0 +1,14 @@
+# Generated output
+output/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+.vscode/
+
+# Logs (test data ko rakho)
+*.log
+!test_data/*.log
